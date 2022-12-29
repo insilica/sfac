@@ -1,4 +1,5 @@
 .*
+data/
 result
 
 !.devcontainer
@@ -6,4 +7,5 @@ result
 !.envrc
 !.gitignore
 !.github
+!.keep
 !.vscode

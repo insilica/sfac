@@ -1,0 +1,25 @@
+db: sink.jsonl
+reviewer: "mailto:user@example.com"
+
+labels:
+  annotation:
+    type: webannotation
+    question: Annotation
+
+flows:
+  import:
+    steps:
+      - uses: github:insilica/srvc-pubmed-search
+        query: susceptibility factor
+
+  label:
+    steps:
+      - run_embedded: generator-file sink.jsonl
+
+      - uses: github:sysrev/srvc-hello#spacy
+        labels: [annotation]
+        model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
+
+      - run_embedded: "html src/resources/public/recogito.html"
+        port: 5002
+        labels: [annotation]
