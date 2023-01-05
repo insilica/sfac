@@ -2,7 +2,7 @@
   description = "sfac";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     srvc.url = "github:insilica/rs-srvc";
   };
