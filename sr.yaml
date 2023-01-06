@@ -5,6 +5,21 @@ labels:
   annotation:
     type: webannotation
     question: Annotation
+    entities:
+      - COMPOUND
+      - DOSE
+      - EXPOSURE_ROUTE
+      - IN_VITRO_VIVO
+      - ORGANISM
+      - PARENT_VS_OFFSPRING
+      - PHENOTYPE
+    relationships:
+      inhibits:
+        - from: COMPOUND
+          to: [COMPOUND, ORGANISM]
+      promotes:
+        - from: COMPOUND
+          to: [PHENOTYPE]
 
 flows:
   import:
@@ -12,7 +27,7 @@ flows:
       - uses: github:insilica/srvc-pubmed-search
         query: susceptibility factor
 
-  label:
+  spacy:
     steps:
       - run_embedded: generator-file sink.jsonl
 
@@ -20,6 +35,16 @@ flows:
         labels: [annotation]
         model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
 
+  label:
+    steps:
+      - run_embedded: generator-file sink.jsonl
+
       - run_embedded: "html src/resources/public/recogito.html"
-        port: 5002
+        labels: [annotation]
+
+  brat:
+    steps:
+      - run_embedded: generator-file sink.jsonl
+
+      - run_embedded: "html srvc-brat/src/index.xhtml"
         labels: [annotation]
