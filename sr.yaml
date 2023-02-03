@@ -27,13 +27,16 @@ flows:
       - uses: github:insilica/srvc-pubmed-search
         query: susceptibility factor
 
-  spacy:
+  recogito:
     steps:
-      - run_embedded: generator-file sink.jsonl
+      - run-embedded: generator sink.jsonl
 
       - uses: github:sysrev/srvc-hello#spacy
         labels: [annotation]
         model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
+
+      - run-embedded: "html src/resources/public/recogito.html"
+        labels: [annotation]
 
   label:
     steps:
