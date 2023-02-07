@@ -8,7 +8,7 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    srvc.url = "github:insilica/rs-srvc";
+    srvc.url = "github:insilica/rs-srvc/v0.13.0";
   };
   outputs = { self, nixpkgs, flake-utils, srvc, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:

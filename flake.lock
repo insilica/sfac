@@ -64,11 +64,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1673301451,
-        "narHash": "sha256-0IvOqAXZ+dHjOV7dQl4iEcCUmzqg8VvGg+UZ68ONDIg=",
+        "lastModified": 1675698036,
+        "narHash": "sha256-BgsQkQewdlQi8gapJN4phpxkI/FCE/2sORBaFcYbp/A=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "35f1f865c03671a4f75a6996000f03ac3dc3e472",
+        "rev": "1046c7b92e908a1202c0f1ba3fc21d19e1cf1b62",
         "type": "github"
       },
       "original": {
@@ -92,15 +92,16 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1673397332,
-        "narHash": "sha256-jdG6mO3LSsXFX8zU2iLGLSXt/tvjan5t1fsRgnehgb4=",
+        "lastModified": 1674604436,
+        "narHash": "sha256-m4mN+vDEKPHRavtI9CbszOOdJcLYa+XqlzEyPvPXE0g=",
         "owner": "insilica",
         "repo": "rs-srvc",
-        "rev": "aec4060ce74f7972f0596a93039b4d659f0a960e",
+        "rev": "f7cb36730eb2c344b0eeda18dcc572bc72d64e1a",
         "type": "github"
       },
       "original": {
         "owner": "insilica",
+        "ref": "v0.13.0",
         "repo": "rs-srvc",
         "type": "github"
       }
