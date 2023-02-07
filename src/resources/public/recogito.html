@@ -126,9 +126,10 @@ h1 {
         })
         req.open("POST", "/submit-label-answers")
         req.setRequestHeader("Content-Type", "application/json")
+        var current_labels = config['current-labels'] || config['current_labels'];
         var answer = {"data": {"answer": r.getAnnotations(),
                                "document": currentDocEvents[0].hash,
-                               "label": config.current_labels[0].hash,
+                               "label": current_labels[0].hash,
                                "reviewer": config.reviewer,
                                "timestamp": Math.floor(Date.now() / 1000)},
                       "type": "label-answer"}
