@@ -24,8 +24,7 @@ labels:
 flows:
   import:
     steps:
-      - uses: github:insilica/srvc-pubmed-search
-        query: susceptibility factor
+      - run-embedded: generator https://pubmed-http-server.fly.dev?q=susceptibility+factor
 
   recogito:
     steps:
