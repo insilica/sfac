@@ -35,7 +35,7 @@ flows:
         labels: [annotation]
         model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
 
-      - run-embedded: "html src/resources/public/recogito.html"
+      - run-embedded: html https://static.sysrev.com/srvc/recogito/
         labels: [annotation]
 
   label:
