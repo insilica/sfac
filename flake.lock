@@ -33,11 +33,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1673301451,
-        "narHash": "sha256-0IvOqAXZ+dHjOV7dQl4iEcCUmzqg8VvGg+UZ68ONDIg=",
+        "lastModified": 1675758091,
+        "narHash": "sha256-7gFSQbSVAFUHtGCNHPF7mPc5CcqDk9M2+inlVPZSneg=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "35f1f865c03671a4f75a6996000f03ac3dc3e472",
+        "rev": "747927516efcb5e31ba03b7ff32f61f6d47e7d87",
         "type": "github"
       },
       "original": {
@@ -57,6 +57,9 @@
     },
     "srvc": {
       "inputs": {
+        "flake-compat": [
+          "flake-compat"
+        ],
         "flake-utils": [
           "flake-utils"
         ],
@@ -65,16 +68,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1674604436,
-        "narHash": "sha256-m4mN+vDEKPHRavtI9CbszOOdJcLYa+XqlzEyPvPXE0g=",
+        "lastModified": 1676070178,
+        "narHash": "sha256-gid3zPN9fdUqqNnRKvhEfzO4rJqZ3lWwmlP6SWEUyAY=",
         "owner": "insilica",
         "repo": "rs-srvc",
-        "rev": "f7cb36730eb2c344b0eeda18dcc572bc72d64e1a",
+        "rev": "a13e6ce3aa6a7959649bb8db89c35c0e99caf322",
         "type": "github"
       },
       "original": {
         "owner": "insilica",
-        "ref": "v0.13.0",
+        "ref": "v0.14.0",
         "repo": "rs-srvc",
         "type": "github"
       }
