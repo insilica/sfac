@@ -48,5 +48,5 @@ flows:
     steps:
       - run_embedded: generator-file sink.jsonl
 
-      - run_embedded: "html srvc-brat/src/index.xhtml"
+      - run-embedded: html https://static.sysrev.com/srvc/brat/
         labels: [annotation]
