@@ -26,13 +26,17 @@ flows:
     steps:
       - run-embedded: generator https://pubmed-http-server.fly.dev?q=susceptibility+factor
 
-  recogito:
+  spacy:
     steps:
       - run-embedded: generator sink.jsonl
 
       - uses: github:sysrev/srvc-hello#spacy
         labels: [annotation]
         model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
+
+  recogito:
+    steps:
+      - run-embedded: generator sink.jsonl
 
       - run-embedded: html https://static.sysrev.com/srvc/recogito/
         labels: [annotation]
@@ -40,10 +44,6 @@ flows:
   brat:
     steps:
       - run-embedded: generator sink.jsonl
-
-      - uses: github:sysrev/srvc-hello#spacy
-        labels: [annotation]
-        model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
 
       - run-embedded: html https://static.sysrev.com/srvc/brat/
         labels: [annotation]
