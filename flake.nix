@@ -17,21 +17,7 @@
   };
   outputs = { self, nixpkgs, flake-utils, srvc, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
-      with import nixpkgs { inherit system; };
-      let
-        sfac = stdenv.mkDerivation {
-          name = "sfac";
-          src = ./.;
-
-          installPhase = ''
-            mkdir -p $out
-          '';
-        };
-      in {
-        packages = {
-          inherit sfac;
-          default = sfac;
-        };
+      with import nixpkgs { inherit system; }; {
         devShells.default =
           mkShell { buildInputs = [ srvc.packages.${system}.default ]; };
       });
