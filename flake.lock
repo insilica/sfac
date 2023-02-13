@@ -1,5 +1,58 @@
 {
   "nodes": {
+    "clj-nix": {
+      "inputs": {
+        "devshell": "devshell",
+        "flake-utils": [
+          "srvc-server",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "srvc-server",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1674900782,
+        "narHash": "sha256-rXNLt1X6K2M2JvDuRdpyaJUGtIU+ISiCYK4kx2FycfI=",
+        "owner": "jlesquembre",
+        "repo": "clj-nix",
+        "rev": "fb4d61aae67ae62d0c2c9cdfbfc311c6f7dc4c12",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jlesquembre",
+        "repo": "clj-nix",
+        "type": "github"
+      }
+    },
+    "devshell": {
+      "inputs": {
+        "flake-utils": [
+          "srvc-server",
+          "clj-nix",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "srvc-server",
+          "clj-nix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1658746384,
+        "narHash": "sha256-CCJcoMOcXyZFrV1ag4XMTpAPjLWb4Anbv+ktXFI1ry0=",
+        "owner": "numtide",
+        "repo": "devshell",
+        "rev": "0ffc7937bb5e8141af03d462b468bd071eb18e1b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "devshell",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -52,7 +105,8 @@
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "srvc": "srvc"
+        "srvc": "srvc",
+        "srvc-server": "srvc-server"
       }
     },
     "srvc": {
@@ -79,6 +133,36 @@
         "owner": "insilica",
         "ref": "v0.14.0",
         "repo": "rs-srvc",
+        "type": "github"
+      }
+    },
+    "srvc-server": {
+      "inputs": {
+        "clj-nix": "clj-nix",
+        "flake-compat": [
+          "flake-compat"
+        ],
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "srvc": [
+          "srvc"
+        ]
+      },
+      "locked": {
+        "lastModified": 1676049443,
+        "narHash": "sha256-KVnld8wySx7efF+98BnOCkq8WX+DCdWo8vvEaY8gy6s=",
+        "owner": "insilica",
+        "repo": "srvc-server",
+        "rev": "d3bfb2dbd3a2fdefe813d848d0149d6dc93728ca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "insilica",
+        "repo": "srvc-server",
         "type": "github"
       }
     }
