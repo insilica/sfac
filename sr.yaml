@@ -39,7 +39,11 @@ flows:
 
   brat:
     steps:
-      - run_embedded: generator-file sink.jsonl
+      - run-embedded: generator sink.jsonl
+
+      - uses: github:sysrev/srvc-hello#spacy
+        labels: [annotation]
+        model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
 
       - run-embedded: html https://static.sysrev.com/srvc/brat/
         labels: [annotation]
