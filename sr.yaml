@@ -37,13 +37,6 @@ flows:
       - run-embedded: html https://static.sysrev.com/srvc/recogito/
         labels: [annotation]
 
-  label:
-    steps:
-      - run_embedded: generator-file sink.jsonl
-
-      - run_embedded: "html src/resources/public/recogito.html"
-        labels: [annotation]
-
   brat:
     steps:
       - run_embedded: generator-file sink.jsonl
