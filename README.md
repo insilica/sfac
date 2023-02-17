@@ -1,19 +1,17 @@
 # SFAC - Susceptibility Factors SRVC
 
 ## Get Started
-First [install nix](https://nixos.org/download.html) then:
-
+1. First [install nix](https://nixos.org/download.html) 
+2. clone this project
+3. start a nix shell (downloading dependencies might take a while the first time)
 ```sh
-$ gh repo clone insilica/sfac && cd sfac
-$ nix-shell
-[nix-shell:/sfac]$ sr flow import
-[nix-shell:/sfac]$ sr flow brat
-http://127.0.0.1:42445
+gh repo clone insilica/sfac && cd sfac
+nix-shell  
 ```
 
-1. gh repo clone uses github cli to clone this project.
-2. nix-shell starts a shell with all the required dependencies for this project.
-3. sr flow import pulls documents for this project
-4. sr flow brat starts a user interface for reviewing documents
-5. the resulting server url allows you to open the UI in your browser
-
+In the nix shell you can now use the SRVC tool `sr` to run flows:
+```nix
+sr flow import # import some documents from pubmed
+sr flow brat   # start a review user interface
+http://127.0.0.1:42445
+```
