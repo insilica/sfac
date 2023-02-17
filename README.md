@@ -1,7 +1,7 @@
 # SFAC - Susceptibility Factors SRVC
 
 ## Get Started
-First download nix then:
+First [install nix](https://nixos.org/download.html) then:
 
 ```sh
 $ gh repo clone insilica/sfac && cd sfac
