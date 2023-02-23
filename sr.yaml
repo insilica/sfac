@@ -1,4 +1,4 @@
-db: sink.jsonl
+db: sink.db
 reviewer: "mailto:user@example.com"
 
 labels:
@@ -28,7 +28,7 @@ flows:
 
   spacy:
     steps:
-      - run-embedded: generator sink.jsonl
+      - run-embedded: generator sink.db
 
       - uses: github:sysrev/srvc-hello#spacy
         labels: [annotation]
@@ -36,14 +36,14 @@ flows:
 
   recogito:
     steps:
-      - run-embedded: generator sink.jsonl
+      - run-embedded: generator sink.db
 
       - run-embedded: html https://static.sysrev.com/srvc/recogito/
         labels: [annotation]
 
   brat:
     steps:
-      - run-embedded: generator sink.jsonl
+      - run-embedded: generator sink.db
 
       - run-embedded: html https://static.sysrev.com/srvc/brat/
         labels: [annotation]
