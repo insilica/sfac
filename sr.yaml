@@ -38,6 +38,9 @@ flows:
       - uses: .#gpt-label
         labels: [groupblOdlb]
 
+      - run-embedded: label-web
+        labels: [groupblOdlb]
+
   import:
     steps:
       - run-embedded: generator https://pubmed-http-server.fly.dev?q=susceptibility+factor
