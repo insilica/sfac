@@ -58,6 +58,7 @@
         packages = { inherit gpt-label; };
         devShells.default = mkShell {
           buildInputs = [
+            poetry2nix.packages.${system}.poetry
             srvc.packages.${system}.default
             srvc-server.packages.${system}.default
           ];
