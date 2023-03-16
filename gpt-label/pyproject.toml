@@ -6,7 +6,8 @@ authors = ["John Shaffer <john@insilica.co>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-llama-index = "^0.4.27"
+openai = "^0.27.2"
+tiktoken = "^0.3.1"
 
 [build-system]
 requires = ["poetry-core"]
