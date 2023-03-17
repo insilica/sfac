@@ -40,6 +40,7 @@ flows:
 
       - run-embedded: label-web
         labels: [groupblOdlb]
+        port: 6001
 
   import:
     steps:
