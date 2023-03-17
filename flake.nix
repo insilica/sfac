@@ -54,8 +54,22 @@
             cp -r bin $out
           '';
         };
+        gpt4-label-package = mkPoetryApplication {
+          inherit overrides;
+          preferWheels = true;
+          projectDir = ./gpt4-label;
+        };
+        gpt4-label = stdenv.mkDerivation {
+          name = "sfac-gpt4-label";
+          src = ./gpt4-label;
+          buildInputs = [ gpt4-label-package.dependencyEnv ];
+          installPhase = ''
+            mkdir -p $out
+            cp -r bin $out
+          '';
+        };
       in {
-        packages = { inherit gpt-label; };
+        packages = { inherit gpt-label gpt4-label; };
         devShells.default = mkShell {
           buildInputs = [
             poetry2nix.packages.${system}.poetry

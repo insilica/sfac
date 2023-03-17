@@ -42,6 +42,17 @@ flows:
         labels: [groupblOdlb]
         port: 6001
 
+  gpt4-label:
+    steps:
+      - run-embedded: generator sink.db
+
+      - uses: .#gpt4-label
+        labels: [groupblOdlb]
+
+      - run-embedded: label-web
+        labels: [groupblOdlb]
+        port: 6002
+
   import:
     steps:
       - run-embedded: generator https://pubmed-http-server.fly.dev?q=susceptibility+factor

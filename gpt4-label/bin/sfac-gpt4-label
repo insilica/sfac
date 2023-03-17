@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import asyncio
+from sfac_gpt4_label import main
+
+asyncio.run(main())
