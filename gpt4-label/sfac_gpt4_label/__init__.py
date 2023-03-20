@@ -1,8 +1,12 @@
 from json.decoder import JSONDecodeError
 from openai import ChatCompletion
-import asyncio, json, math, os, re, sys, tiktoken, time
+import asyncio, json, jsonschema, math, openai, os, random, re, sys, tiktoken, time
 
-SYSTEM_MESSAGE = {"role": "system", "content": "You are a ReviewGPT, a researcher who always gives answers that are valid according to the provided JSON schema. Provide JSON data using only information from the schema and document."}
+MAX_INPUT_SIZE = 8191
+SYSTEM_MESSAGE = {"role": "system", "content": "You are a ReviewGPT, a research assistant. Provide JSON data using only information from the schema and document. If you aren't sure of an answer, don't provide a value."}
+
+def to_json(m):
+  return json.dumps(m, separators=(',', ':'))
 
 # I am going to try this for GPT-4 for now if we don't run into problems
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
@@ -25,31 +29,47 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
       raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
   See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
 
-def query( max_input_size, prompt):
+def query(prompt, retry_sec=3):
   messages = [
     SYSTEM_MESSAGE,
     {"role": "user", "content": prompt}
   ]
 
   tokens = num_tokens_from_messages(messages)
-  max_prompt_size = max_input_size - 1024
+  max_prompt_size = MAX_INPUT_SIZE - 1024
   if tokens >= max_prompt_size:
     reduction_ratio = max_prompt_size / tokens
     reduced_prompt_length = int(len(prompt) * (1 - reduction_ratio)) - 1
     prompt = prompt[:reduced_prompt_length]
-    return query(max_input_size, prompt)
+    return query(MAX_INPUT_SIZE, prompt)
   else:
-    return ChatCompletion.create(model="gpt-4", messages=messages)
+    try:
+      return ChatCompletion.create(model="gpt-4", messages=messages)
+    except openai.error.RateLimitError:
+      retry_sec += 3 * random.random()
+      time.sleep(retry_sec)
+      query(prompt, 2 * retry_sec)
 
-def completions_to_answers(predictions, label):
-  label_order = label['json-schema']['items']['srvcOrder']
-  content = predictions['choices'][0]['message']['content'].strip()
-  finish_reason = predictions['choices'][0]['finish_reason']
+def clarify_answers(label, answers, msg):
+  prompt = "Answer only with data that validates against this schema: " + to_json(label['json-schema'])
+  prompt += "\nHere is the JSON data that must conform to the given schema: " + to_json(answers)
+  prompt += "\nError message: " + msg
+  q = query(prompt)
+  if not q:
+    return
+
+  content = q['choices'][0]['message']['content'].strip()
+  finish_reason = q['choices'][0]['finish_reason']
   if finish_reason == 'stop':
     try:
-      return json.loads(content)
+      answers = json.loads(content)
+      try:
+        jsonschema.validate(instance=answers, schema=label['json-schema'])
+      except jsonschema.exceptions.ValidationError as e:
+        return []
+      return answers
     except JSONDecodeError:
-      # Sometimes gpt-3.5 returns a prose answer stating that it has no answers
+      # Sometimes GPT returns a prose answer stating that it has no answers
       return []
   elif finish_reason == 'length':
     # JSON truncated
@@ -58,11 +78,34 @@ def completions_to_answers(predictions, label):
     # No API response, or content omitted due to filters
     return []
 
-def predict_doc(max_input_size, doc, label):
-  json_schema = '{"$id":"http://localhost:4061/web-api/srvc-json-schema?hash=QmQ4djRUAv7QmKL5KSZ3ZfvhRBBqgxcLjHyzXXf6uA4wVZ","type":"array","items":{"type":"object","srvcOrder":["stringwgdddI","categoricalLfOFUj","stringWODblq"],"properties":{"stringWODblq":{"type":"string","title":"Target","maxLength":100},"stringwgdddI":{"type":"string","title":"Source","maxLength":100},"categoricalLfOFUj":{"type":"array","items":{"enum":["inhibits","promotes"],"type":"string"},"title":"Relationship"}}},"title":"Relationships","$schema":"http://json-schema.org/draft-07/schema"}'
-  prompt = "JSON schema:" + json_schema + '\n'
+def completions_to_answers(predictions, label):
+  content = predictions['choices'][0]['message']['content'].strip()
+  finish_reason = predictions['choices'][0]['finish_reason']
+  if finish_reason == 'stop':
+    try:
+      answers = json.loads(content)
+      try:
+        jsonschema.validate(instance=answers, schema=label['json-schema'])
+      except jsonschema.exceptions.ValidationError as e:
+        return clarify_answers(label, answers, str(e))
+      return answers
+    except JSONDecodeError:
+      # Sometimes GPT returns a prose answer stating that it has no answers
+      return []
+  elif finish_reason == 'length':
+    # JSON truncated
+    return []
+  else:
+    # No API response, or content omitted due to filters
+    return []
+
+def predict_doc(doc, label):
+  json_schema = json.dumps(label['json-schema'], separators=(',', ':'))
+  prompt = "Answer only in JSON that is valid according to this schema:" + json_schema
   prompt += "Document title: " + (doc['data']['title'] or '') + '\nAbstract: ' + (doc['data']['abstract'] or '')
-  return completions_to_answers(query(max_input_size, prompt), label)
+  predictions = query(prompt)
+  if predictions:
+    return completions_to_answers(predictions, label)
 
 def get_answer(doc, label, predictions, reviewer):
     data = {
@@ -92,10 +135,7 @@ async def main():
     _, sr_output = await asyncio.open_connection(ohost, oport, limit=limit)
 
     config = json.load(open(os.environ['SR_CONFIG']))
-    label = config['current-labels'][0]
     reviewer = config['reviewer']
-
-    max_input_size=8191
 
     doc = None
     answers = []
@@ -109,9 +149,15 @@ async def main():
       if event['type'] == 'document':
         if doc:
           if not len(answers):
-            predictions = predict_doc(max_input_size, doc, label)
-            answer = get_answer(doc, label, predictions, reviewer)
-            await write_events(sr_output, [answer])
+            results = []
+            for label in config['current-labels']:
+              if label['json-schema']:
+                predictions = predict_doc(doc, label)
+                answer = get_answer(doc, label, predictions, reviewer)
+                if answer:
+                  results.append(answer)
+            if len(results):
+              await write_events(sr_output, results)
         doc = event
         answers = []
         sr_output.write(line)
