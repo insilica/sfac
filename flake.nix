@@ -13,21 +13,8 @@
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    srvc = {
-      url = "github:insilica/rs-srvc/master";
-      inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    srvc-server = {
-      url = "github:insilica/srvc-server";
-      inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
-  outputs =
-    { self, nixpkgs, flake-utils, poetry2nix, srvc, srvc-server, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
@@ -70,11 +57,7 @@
       in {
         packages = { inherit gpt-label gpt4-label; };
         devShells.default = mkShell {
-          buildInputs = [
-            poetry2nix.packages.${system}.poetry
-            srvc.packages.${system}.default
-            srvc-server.packages.${system}.default
-          ];
+          buildInputs = [ poetry2nix.packages.${system}.poetry srvc ];
         };
       });
 }
