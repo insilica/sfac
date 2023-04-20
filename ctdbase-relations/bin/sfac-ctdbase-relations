@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import asyncio
+from sfac_ctdbase_relations import main
+
+asyncio.run(main())

@@ -26,6 +26,20 @@
               ++ [ super.setuptools ];
           });
         });
+        ctdbase-relations-package = mkPoetryApplication {
+          inherit overrides;
+          preferWheels = true;
+          projectDir = ./ctdbase-relations;
+        };
+        ctdbase-relations = stdenv.mkDerivation {
+          name = "sfac-ctdbase-relations";
+          src = ./ctdbase-relations;
+          buildInputs = [ ctdbase-relations-package.dependencyEnv ];
+          installPhase = ''
+            mkdir -p $out
+            cp -r bin $out
+          '';
+        };
         gpt-label-package = mkPoetryApplication {
           inherit overrides;
           preferWheels = true;
@@ -55,7 +69,7 @@
           '';
         };
       in {
-        packages = { inherit gpt-label gpt4-label; };
+        packages = { inherit ctdbase-relations gpt-label gpt4-label; };
         devShells.default = mkShell {
           buildInputs = [ poetry2nix.packages.${system}.poetry srvc ];
         };
