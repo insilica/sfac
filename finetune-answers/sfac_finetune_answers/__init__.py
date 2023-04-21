@@ -1,8 +1,4 @@
-from json.decoder import JSONDecodeError
-from openai import ChatCompletion
-import asyncio, json, jsonschema, math, openai, os, random, re, requests, sys, tiktoken, time
-import pandas as pd
-import xml.etree.ElementTree as ET
+import json, sys
 
 def write_train_data(doc, answers):
   data = doc.get('data', {})
