@@ -8,22 +8,22 @@ def write_train_data(doc, answers):
     print(json.dumps({'completion': json.dumps(answer['data']['answer']), 'prompt': prompt}))
 
 def train(filename):
-    with open(filename) as file:
-      answers = []
-      doc = None
-      for line in file:
-        if not line.strip():
-            continue
+  with open(filename) as file:
+    answers = []
+    doc = None
+    for line in file:
+      if not line.strip():
+          continue
 
-        event = json.loads(line)
-        if event['type'] == 'document':
-          if doc:
-            write_train_data(doc, answers)
-          answers = []
-          doc = event
-        elif event['type'] == 'label-answer':
-          answers.append(event)
-    write_train_data(doc, answers)
+      event = json.loads(line)
+      if event['type'] == 'document':
+        if doc:
+          write_train_data(doc, answers)
+        answers = []
+        doc = event
+      elif event['type'] == 'label-answer':
+        answers.append(event)
+  write_train_data(doc, answers)
 
 async def main():
   train(sys.argv[1])
