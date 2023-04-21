@@ -1,15 +1,20 @@
 import argparse, json, shlex, subprocess, sys, tempfile
 
-def write_train_data(doc, answers):
+def write_train_data(doc, answers, labels):
   data = doc.get('data', {})
   prompt = (data.get('title') or '') + '\n\n' + (data.get('abstract') or '') + '\n\n' + (data.get('text') or '')
 
   for answer in answers:
-    print(json.dumps({'completion': json.dumps(answer['data']['answer']), 'prompt': prompt}))
+    label = labels[answer['data']['label']]
+    print(json.dumps({
+      'completion': json.dumps(answer['data']['answer']),
+      'prompt': 'Label: ' + label['data']['question'] + '\n\n' + prompt
+    }))
 
 def train(file):
   answers = []
   doc = None
+  labels = {}
 
   for line in file:
     if not line.strip():
@@ -18,14 +23,16 @@ def train(file):
     event = json.loads(line)
     if event['type'] == 'document':
       if doc:
-        write_train_data(doc, answers)
+        write_train_data(doc, answers, labels)
       answers = []
       doc = event
+    elif event['type'] == 'label':
+      labels[event['hash']] = event
     elif event['type'] == 'label-answer':
       answers.append(event)
 
   if doc:
-    write_train_data(doc, answers)
+    write_train_data(doc, answers, labels)
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Create OpenAI fine-tuning data from SRVC events')
