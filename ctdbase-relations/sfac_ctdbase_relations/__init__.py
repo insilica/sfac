@@ -1,6 +1,6 @@
 from Bio import Entrez
 import pandas as pd
-import io, json, re, requests, subprocess, tarfile
+import io, json, re, requests, subprocess, sys, tarfile
 import urllib.request
 from xml.etree import ElementTree as ET
 
@@ -84,7 +84,7 @@ def fetch_ftp(article_url, pmcid):
                         xml_content = xml_file.read().decode('utf-8')
                         return xml_content
   except urllib.error.URLError as e:
-    #print(f"Couldn't download the file for PMC ID: {pmcid}, error: {e}")
+    print(f"Couldn't download the file for PMC ID: {pmcid}, error: {e}", file=sys.stderr)
     return None
 
 def fetch_pmc_xml(pmcid):
@@ -128,7 +128,8 @@ def add_hash(event):
   stdout, stderr = process.communicate(json.dumps(event))
 
   if process.returncode != 0:
-    print(f"Error: {stderr.strip()}")
+    print(f"Error: {stderr.strip()}", file=sys.stderr)
+    sys.exit(process.returncode)
   else:
     return json.loads(stdout.strip())
 
