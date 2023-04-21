@@ -52,6 +52,10 @@ async def main():
       train(temp_file)
 
 """
+nix run github:insilica/sfac#finetune-answers -- MY_SINK.db
+"""
+
+"""
 nix run .#finetune-answers -- ../ctdbase-relations/train.jsonl > train.jsonl
 rm train_prepared.jsonl
 openai tools fine_tunes.prepare_data -f train.jsonl -q
