@@ -2,7 +2,7 @@ import argparse, json, shlex, subprocess, sys, tempfile
 
 def write_train_data(doc, answers):
   data = doc.get('data', {})
-  prompt = data.get('title', '') + '\n\n' + data.get('abstract', '') + '\n\n' + data.get('text', '')
+  prompt = (data.get('title') or '') + '\n\n' + (data.get('abstract') or '') + '\n\n' + (data.get('text') or '')
 
   for answer in answers:
     print(json.dumps({'completion': json.dumps(answer['data']['answer']), 'prompt': prompt}))
