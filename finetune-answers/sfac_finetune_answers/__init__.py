@@ -1,4 +1,4 @@
-import argparse, json, sys
+import argparse, json, shlex, subprocess, sys, tempfile
 
 def write_train_data(doc, answers):
   data = doc.get('data', {})
@@ -32,10 +32,24 @@ def parse_args():
   parser.add_argument('train_file', type=str)
   return parser.parse_args()
 
+def pull_db(config_file, from_file, to_file):
+  cmd = f"sr --config {shlex.quote(config_file)} pull {shlex.quote(from_file)} --db {shlex.quote(to_file)}"
+  result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+
+  if result.returncode != 0:
+      print(f"Error in subprocess: {result.stderr}", file=sys.stderr)
+      sys.exit(result.returncode)
+
 async def main():
   args = parse_args()
-  with open(args.train_file) as file:
-    train(file)
+  with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.yaml') as config_file:
+    config_file.write("{reviewer: mailto:user@example.com}\n")
+    config_file.flush()
+    with tempfile.NamedTemporaryFile(delete=True, suffix='.jsonl') as temp_file:
+      # jsonl files may not be in the right order, or the db may be a SQLite file.
+      # Pulling the db ensures that we get a correctly ordered JSONL file.
+      pull_db(config_file.name, args.train_file, temp_file.name)
+      train(temp_file)
 
 """
 nix run .#finetune-answers -- ../ctdbase-relations/train.jsonl > train.jsonl
