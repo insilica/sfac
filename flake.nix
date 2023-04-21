@@ -40,6 +40,20 @@
             cp -r bin $out
           '';
         };
+        finetune-answers-package = mkPoetryApplication {
+          inherit overrides;
+          preferWheels = true;
+          projectDir = ./finetune-answers;
+        };
+        finetune-answers = stdenv.mkDerivation {
+          name = "sfac-finetune-answers";
+          src = ./finetune-answers;
+          buildInputs = [ finetune-answers-package.dependencyEnv ];
+          installPhase = ''
+            mkdir -p $out
+            cp -r bin $out
+          '';
+        };
         gpt-label-package = mkPoetryApplication {
           inherit overrides;
           preferWheels = true;
@@ -69,9 +83,11 @@
           '';
         };
       in {
-        packages = { inherit ctdbase-relations gpt-label gpt4-label; };
+        packages = {
+          inherit ctdbase-relations finetune-answers gpt-label gpt4-label;
+        };
         devShells.default = mkShell {
-          buildInputs = [ poetry2nix.packages.${system}.poetry srvc ];
+          buildInputs = [ openai-full poetry2nix.packages.${system}.poetry srvc ];
         };
       });
 }

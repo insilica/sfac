@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import asyncio
+from sfac_finetune_answers import main
+
+asyncio.run(main())

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "sfac-finetune-answers"
+version = "0.1.0"
+description = ""
+authors = ["John Shaffer <john@insilica.co>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.27.4"
+tiktoken = "^0.3.3"
+jsonschema = "^4.17.3"
+pandas = "^2.0.0"
+pyarrow = "^11.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
