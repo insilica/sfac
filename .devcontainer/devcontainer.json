@@ -1,37 +1,22 @@
 {
-    "name": "sfac",
-    "dockerFile": "Dockerfile",
-    "context": "${localWorkspaceFolder}",
-    "build": {
-        "args": {
-            "USER_UID": "${localEnv:USER_UID}",
-            "USER_GID": "${localEnv:USER_GID}"
-        }
-    },
-    "runArgs": [
-        "--security-opt",
-        "label=disable"
-    ],
-    "containerEnv": {
-        "PRELOAD_EXTENSIONS": "arrterian.nix-env-selector"
-    },
-    "overrideCommand": false,
-    "userEnvProbe": "loginShell",
-    "updateRemoteUserUID": false,
-    "onCreateCommand": "nix-shell --run \"echo done building nix dev environment\"",
-    "extensions": [
-        "arrterian.nix-env-selector"
-    ],
-    "forwardPorts": [],
-    "mounts": [
-        "source=nix_store,target=/nix,type=volume"
-    ],
-    "customizations": {
-        "codespaces": {
-            "openFiles": [
-                "README.md",
-                "sr.yaml"
-            ]
-        }
-    }
+	"name": "SFac",
+	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/nix:1": {},
+		"ghcr.io/bananalab/devcontainer-features/direnv:0": {}
+	},
+	"customizations": {
+		"settings": {
+			"nix.formatterPath": "alejandra"
+		},
+		"vscode": {
+			"extensions": [
+				"EditorConfig.EditorConfig",
+				"jnoortheen.nix-ide",
+				"mkhl.direnv",
+				"rust-lang.rust-analyzer"
+			]
+		}
+	},
+	"postCreateCommand": "bash ./.devcontainer/postCreateCommand.sh"
 }
