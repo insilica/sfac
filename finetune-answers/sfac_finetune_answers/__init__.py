@@ -7,7 +7,7 @@ def write_train_data(doc, answers, labels):
   for answer in answers:
     label = labels[answer['data']['label']]
     print(json.dumps({
-      'completion': json.dumps(answer['data']['answer']),
+      'completion': ' ' + json.dumps(answer['data']['answer']) + '"""',
       'prompt': 'Label: ' + label['data']['question'] + '\n\n' + prompt
     }))
 

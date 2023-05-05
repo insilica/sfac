@@ -13,8 +13,9 @@
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    srvc.url = "/home/john/src/rs-srvc";
   };
-  outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, poetry2nix, srvc, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
@@ -82,12 +83,28 @@
             cp -r bin $out
           '';
         };
+        openai-label-package = mkPoetryApplication {
+          inherit overrides;
+          preferWheels = true;
+          projectDir = ./openai-label;
+        };
+        openai-label = stdenv.mkDerivation {
+          name = "sfac-openai-label";
+          src = ./openai-label;
+          buildInputs = [ openai-label-package.dependencyEnv ];
+          installPhase = ''
+            mkdir -p $out
+            cp -r bin $out
+          '';
+        };
       in {
         packages = {
-          inherit ctdbase-relations finetune-answers gpt-label gpt4-label;
+          inherit ctdbase-relations finetune-answers gpt-label gpt4-label
+            openai-label;
         };
         devShells.default = mkShell {
-          buildInputs = [ openai-full poetry2nix.packages.${system}.poetry srvc ];
+          buildInputs =
+            [ openai-full poetry2nix.packages.${system}.poetry srvc.packages.${system}.default ];
         };
       });
 }
