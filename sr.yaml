@@ -1,4 +1,4 @@
-db: sink.db
+db: sink.jsonl
 reviewer: "mailto:user@example.com"
 
 labels:
@@ -20,12 +20,13 @@ labels:
       promotes:
         - from: COMPOUND
           to: [PHENOTYPE]
+  correct-rel:
+    question: Mark correct relationships
+    json-schema: {"type": "array", "items": {"type": "boolean"}}
   groupblOdlb:
     question: Relationships
     required: false
     json-schema: {"$id":"http://localhost:4061/web-api/srvc-json-schema?hash=QmX86egbGhwdb3zBvEVGxFwhm4FfCcYNAaVkiJhuh2j2Dp","type":"array","items":{"type":"object","required":["stringyUIqDj","categoricalrnZVsv","stringSnKlNe"],"srvcOrder":["stringyUIqDj","categoricalrnZVsv","stringSnKlNe"],"properties":{"stringSnKlNe":{"type":"string","title":"Target","maxLength":100,"minLength":1},"stringyUIqDj":{"type":"string","title":"Source","maxLength":100,"minLength":1},"categoricalrnZVsv":{"type":"array","items":{"enum":["increases susceptibility to","decreases susceptibilty to"],"type":"string"},"title":"Relationship","minItems":1}}},"title":"N/A","$schema":"http://json-schema.org/draft-07/schema"}
-  label-correct:
-    question: Is the label correct?
   overall include:
     question: Include this article?
     required: true
@@ -51,10 +52,6 @@ flows:
       #- uses: .#gpt4-label
       - run-embedded: http http://localhost:5000/map
         labels: [groupblOdlb]
-
-      - run-embedded: label-web
-        labels: [groupblOdlb]
-        port: 6002
 
   label-web:
     steps:
@@ -97,3 +94,12 @@ flows:
       #- uses: .#openai-label
       - run-embedded: http http://localhost:5000/map
         labels: [groupblOdlb]
+
+  feedback:
+    steps:
+      - run-embedded: generator sink.db
+
+      - run-embedded: html feedback/index.html
+        labels: [correct-rel]
+        target-labels: [groupblOdlb]
+        port: 6003

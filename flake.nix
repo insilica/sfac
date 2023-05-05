@@ -13,7 +13,7 @@
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    srvc.url = "/home/john/src/rs-srvc";
+    srvc.url = "github:insilica/rs-srvc";
   };
   outputs = { self, nixpkgs, flake-utils, poetry2nix, srvc, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    html,
+    body {
+      padding: 10px 20px;
+      margin: 0;
+    }
+
+    button {
+      margin: 4pt;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+
+    #outer-container {
+      position: relative;
+    }
+
+    #content {
+      max-width: 920px;
+      font-size: 17px;
+      line-height: 27px;
+    }
+
+    ul {
+      padding: 0;
+    }
+
+    li {
+      list-style: none;
+    }
+
+
+
+
+    #labels td,
+    thead {
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    li tr+tr {
+      position: relative;
+    }
+
+    li tr+tr:after {
+      content: '';
+      display: block;
+      width: 100%;
+      border-bottom: 1px solid #ccc;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    li td ul {
+      margin: 10px 0;
+    }
+
+    li td ul li+li {
+      margin-top: 4px;
+    }
+
+    input,
+    select {
+      font-size: 14px;
+      line-height: 18px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 7px 10px;
+      margin-right: 4px;
+    }
+
+    td button {
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: middle;
+      margin: 0;
+      border: none;
+      font-size: 16px;
+      padding: 7px 10px;
+    }
+
+    .btn-add {
+      background-color: #86e1ff;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      border-left: 1px solid #ccc;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+    }
+
+    .btn-del {
+      border-top: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+      margin-right: 4px;
+    }
+
+    td button:hover {
+      background-color: #eee;
+      color: #333;
+    }
+
+    input[name^="rating"]:checked ~ .feedback-caption {
+      background-color: #1600dd;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="outer-container">
+    <form id="labels-form">
+      <div>
+        <table id="labels"></table>
+      </div>
+      <div>
+        <button id="submit-labels" type="submit">Submit</button>
+        <button id="skip-document">Skip</button>
+      </div>
+    </form>
+    <hr>
+    <div>
+      <p><a id="document-uri" target="_blank"></a></p>
+      <h2 id="document-title"></h2>
+      <div id="document-abstract"></div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    (function () {
+      let config = null;
+      let currentDocEvents = null;
+      let docUriEl = document.getElementById('document-uri');
+      let docTitleEl = document.getElementById('document-title');
+      let docAbstractEl = document.getElementById('document-abstract');
+      let formEl = document.getElementById('labels-form');
+      let labelsEl = document.getElementById('labels');
+      let submitEl = document.getElementById('submit-labels');
+      let skipEl = document.getElementById('skip-document');
+
+      const booleanInput = (label, answer) => {
+        let el = document.createElement('input');
+        el.id = label['hash'];
+        el.type = 'checkbox';
+        if (answer) {
+          el.checked = true;
+        }
+        return el;
+      };
+
+      const categoricalInput = (label, answer) => {
+        let el = document.createElement('select');
+        el.id = label['hash'];
+        el.appendChild(document.createElement('option'));
+        (label['categories'] || []).forEach(function (category) {
+          let option = document.createElement('option');
+          option.innerText = category;
+          if (answer === category) {
+            option.selected = true;
+          }
+          el.append(option);
+        });
+        return el;
+      };
+
+      const stringInput = (label, ansmer) => {
+        let el = document.createElement('input');
+        el.id = label['hash'];
+        if (answer) {
+          el.value = answer;
+        }
+        let max = label['json-schema']['maxLength'];
+        if (max) {
+          el.maxLength = max;
+        }
+        return el;
+      };
+
+      let insertArrayInput = async (label, answer, table, insertAfter) => {
+        let feedbackAnswers = await currentFeedbackAnswers();
+        let feedbackLabels = await currentFeedbackLabels();
+
+        if (!feedbackAnswers) {
+          let div = document.createElement('div');
+          div.innerText = "No answers";
+          table.appendChild(div);
+          return;
+        }
+
+        let feedbackAnswer = feedbackAnswers[0];
+        let feedbackLabel = feedbackLabels[feedbackAnswer['data']['label']];
+        let feedbackItems = feedbackLabel['data']['json-schema']['items'];
+        let feedbackOrder = null;
+        if (feedbackItems.srvcOrder) {
+          feedbackOrder = feedbackItems.srvcOrder;
+        } else {
+          feedbackOrder = Object.keys(feedbackItems.properties);
+        }
+        let feedbackProps = feedbackItems.properties;
+
+        let tr = document.createElement('tr');
+        table.appendChild(tr);
+        table.classList.add('feedback-table');
+        tr.appendChild(document.createElement('th'));
+        for (const k of feedbackOrder) {
+          let th = document.createElement('th');
+          tr.appendChild(th);
+          th.innerText = feedbackProps[k]['title'];
+        }
+
+        for (const i in feedbackAnswer.data.answer) {
+          let row = feedbackAnswer.data.answer[i];
+          tr = document.createElement('tr');
+          table.appendChild(tr);
+          let td = document.createElement('td');
+          td.style.fontWeight = 'normal';
+          tr.appendChild(td);
+          let label = document.createElement('label');
+          td.appendChild(label);
+          td.style.display = 'flex';
+          let input = document.createElement('input');
+          label.appendChild(input);
+          label.style.display = 'inline-flex';
+          input.style.display = 'none';
+          input.name = 'rating' + i;
+          input.type = 'radio';
+          input.value = 'true';
+          let span = document.createElement('span');
+          label.appendChild(span);
+          span.classList.add('feedback-caption');
+          span.innerText = '👍';
+          span.style.fontSize = '20pt';
+          label = document.createElement('label');
+          td.appendChild(label);
+          label.style.display = 'inline-flex';
+          input = document.createElement('input');
+          label.appendChild(input);
+          input.name = 'rating' + i;
+          input.style.display = 'none';
+          input.type = 'radio';
+          input.value = 'false';
+          span = document.createElement('span');
+          label.appendChild(span);
+          span.classList.add('feedback-caption');
+          span.innerText = '👎';
+          span.style.fontSize = '20pt';
+
+          for (const k of feedbackOrder) {
+            let td = document.createElement('td');
+            td.style.fontWeight = 'normal';
+            tr.appendChild(td);
+            td.innerText = row[k];
+          }
+        }
+      };
+
+      const arrayInput = (label, answer) => {
+        let table = document.createElement('table');
+        table.id = label['hash'];
+        insertArrayInput(label, answer, table);
+        return table;
+      };
+
+      const booleanGroupInput = (answer) => {
+        let el = document.createElement('input');
+        el.type = 'checkbox';
+        if (answer) {
+          el.checked = true;
+        }
+        return el;
+      };
+
+      const enumGroupInput = (schema, answer) => {
+        let el = document.createElement('select');
+        el.appendChild(document.createElement('option'));
+        for (const x in schema.items.enum) {
+          let option = document.createElement('option');
+          let s = schema.items.enum[x];
+          option.innerText = s;
+          if (answer === s) {
+            option.selected = true;
+          }
+          el.append(option);
+        }
+        return el;
+      };
+
+      const stringGroupInput = (schema, answer) => {
+        let el = document.createElement('input');
+        let max = (schema.items || {}).maxLength;
+        if (answer) {
+          el.value = answer;
+        }
+        if (max) {
+          el.maxLength = max;
+        }
+        return el;
+      };
+
+      const insertArrayGroupInput = (schema, answer, ul, insertAfter) => {
+        let li = document.createElement('li');
+        if (insertAfter) {
+          ul.insertBefore(li, insertAfter.nextSibling)
+        } else {
+          ul.appendChild(li);
+        }
+
+        let enu = (schema.items || {})['enum'];
+        let typ = (schema.items || {})['type'];
+        if (enu) {
+          li.appendChild(enumGroupInput(schema, answer));
+        } else if ('boolean' == typ) {
+          li.appendChild(booleanGroupInput(schema, answer));
+        } else if ('string' == typ) {
+          li.appendChild(stringGroupInput(schema, answer));
+        }
+
+        let addButton = document.createElement('button');
+        li.appendChild(addButton);
+        addButton.innerText = '+';
+        addButton.classList.add('btn-add');
+        addButton.addEventListener('click', function (ev) {
+          insertArrayGroupInput(schema, null, ul, li);
+          ev.preventDefault();
+        })
+
+        let delButton = document.createElement('button');
+        li.appendChild(delButton);
+        delButton.innerText = '-';
+        delButton.classList.add('btn-del');
+        delButton.addEventListener('click', function (ev) {
+          removeArrayGroupInput(schema, ul, li);
+          ev.preventDefault();
+        })
+      };
+
+      const removeArrayGroupInput = (schema, ul, li) => {
+        ul.removeChild(li);
+        if (!ul.firstChild) {
+          insertArrayGroupInput(schema, null, ul);
+        }
+      };
+
+      const arrayGroupInput = (schema, answer) => {
+        let ul = document.createElement('ul');
+        answer = (answer && answer.length) ? answer : [null];
+        for (const v of answer) {
+          insertArrayGroupInput(schema, v, ul);
+        }
+        return ul;
+      };
+
+      const insertGroupRow = (table, label, answer, insertAfter) => {
+        let items = label['json-schema'].items || {};
+        let props = items.properties;
+        let tr = document.createElement('tr');
+        table.appendChild(tr);
+        let td = document.createElement('td');
+        tr.appendChild(td);
+
+        let addButton = document.createElement('button');
+        td.appendChild(addButton);
+        addButton.innerText = '+';
+        addButton.classList.add('btn-add');
+        addButton.addEventListener('click', function (ev) {
+          insertGroupRow(table, label, null, insertAfter);
+          ev.preventDefault();
+        });
+
+        let delButton = document.createElement('button');
+        td.appendChild(delButton);
+        delButton.innerText = '-';
+        delButton.classList.add('btn-del');
+        delButton.addEventListener('click', function (ev) {
+          removeGroupRow(label, table, tr);
+          ev.preventDefault();
+        });
+
+        let order = [];
+        if (items.srvcOrder) {
+          order = items.srvcOrder.values();
+        } else {
+          order = Object.keys(props)
+        }
+
+        for (const k of order) {
+          let schema = props[k];
+          let td = document.createElement('td');
+          tr.appendChild(td);
+          let v = answer ? answer[k] : null;
+
+          if ('boolean' == schema.type) {
+            td.appendChild(booleanGroupInput(v));
+          } else if ('array' == schema.type) {
+            td.appendChild(arrayGroupInput(schema, v));
+          } else if ('string' == schema.type) {
+            td.appendChild(stringGroupInput(schema, v));
+          }
+        }
+      };
+
+      const removeGroupRow = (label, table, tr) => {
+        table.removeChild(tr);
+        if (table.firstChild == table.lastChild) {
+          insertGroupRow(table, label);
+        }
+      };
+
+      const groupInput = (label, answer) => {
+        let items = label['json-schema'].items || {};
+        let props = items.properties;
+        let table = document.createElement('table');
+        let thead = document.createElement('thead');
+        table.appendChild(thead);
+        let th = document.createElement('th');
+        thead.appendChild(th);
+
+        let order = [];
+        if (items.srvcOrder) {
+          order = items.srvcOrder.values();
+        } else {
+          order = Object.keys(props)
+        }
+
+        for (const k of order) {
+          let th = document.createElement('th');
+          thead.appendChild(th);
+          th.innerText = props[k].title || k;
+        }
+
+        answer = (answer && answer.length) ? answer : [null];
+        for (const row of answer) {
+          insertGroupRow(table, label, row);
+        }
+
+        return table;
+      };
+
+      const labelInput = (label, answer) => {
+        var tr = document.createElement('tr');
+        var questionTd = document.createElement('td');
+        questionTd.innerText = label['question'];
+        var inputTd = document.createElement('td');
+        var schemaType = (label['json-schema'] || {})['type'];
+        if ('boolean' == schemaType || 'boolean' == label.type) {
+          inputTd.appendChild(booleanInput(label, answer));
+        } else if ('array' == schemaType) {
+          inputTd.appendChild(arrayInput(label, answer));
+        } else if ('categorical' == label.type) {
+          inputTd.appendChild(categoricalInput(label, answer));
+        } else if ('string' == schemaType || 'string' == label.type) {
+          inputTd.appendChild(stringInput(label, answer));
+        } else {
+          var el = document.createElement('div');
+          inputTd.appendChild(el);
+          if (label['json-schema']) {
+            el.innerText = 'Unknown type in JSON schema: ' + schemaType;
+          } else {
+            el.innerText = 'Unknown label type: ' + label.type;
+          }
+        }
+        tr.appendChild(questionTd);
+        tr.appendChild(inputTd);
+        return tr;
+      };
+
+      const getReviewerLastAnswer = async (label) => {
+        let cfg = await config;
+        answers = (await currentDocEvents).filter((m) => {
+          return m['type'] === 'label-answer' && cfg.reviewer === m['data']['reviewer'];
+        });
+        let answersForLabel = answers.filter((m) => {
+          return label['hash'] == m['data']['label'];
+        }).sort((a, b) => b['data']['timestamp'] - a['data']['timestamp']);
+        return answersForLabel.length ? answersForLabel[0] : null;
+      }
+
+      const makeLabelInputs = async () => {
+        let cfg = await config;
+        labelsEl.innerText = '';
+        for (const label of cfg['current-labels']) {
+          let lastAnswer = await getReviewerLastAnswer(label);
+          labelsEl.appendChild(labelInput(label, lastAnswer ? lastAnswer['data']['answer'] : null));
+        }
+      }
+
+      const loadConfig = function () {
+        config = new Promise((resolve, reject) => {
+          let req = new XMLHttpRequest();
+          req.addEventListener("load", function (resp) {
+            resolve(JSON.parse(req.response));
+          });
+          req.open("GET", "/srvc/config");
+          req.send();
+        });
+      };
+
+      let loadCurrentDocEvents = function () {
+        currentDocEvents = new Promise((resolve, reject) => {
+          let req = new XMLHttpRequest();
+          req.addEventListener("load", function (resp) {
+            formEl.reset();
+            currentDocEvents = JSON.parse(req.response) || [];
+            resolve(currentDocEvents);
+            const doc = currentDocEvents.length ? currentDocEvents[0] : {};
+            const data = (doc['data'] || {});
+            docUriEl.setAttribute('href', doc['uri']);
+            docUriEl.innerText = doc['uri'] || "";
+            docTitleEl.innerText = data['title'] || "";
+            docAbstractEl.innerText = data['abstract'] || "";
+            answers = []
+            currentDocEvents.forEach(function (event) {
+              if ('label-answer' == event['type']
+                && doc['hash'] == (event['data'] || {})['event']) {
+                answers.push(event)
+              }
+            });
+            makeLabelInputs(answers)
+
+            if (!currentDocEvents.length) {
+              document.getElementById('document-title').innerText = 'No More Documents';
+              document.getElementById('submit-labels').remove();
+            }
+          });
+          req.open("GET", "/srvc/current-doc-events");
+          req.send();
+        });
+      };
+
+      let currentFeedbackLabels = async function () {
+        let m = {};
+        let cfg = await config;
+        for (tgt of cfg['current-step']['target-labels']) {
+          for (event of await currentDocEvents) {
+            if (event.type === 'label' && (event['data'] || {})['id'] === tgt) {
+              m[event.hash] = event;
+            }
+          }
+        }
+        return m;
+      }
+
+      let currentFeedbackAnswers = async function () {
+        let acc = [];
+        let feedbackLabels = await currentFeedbackLabels();
+        for (event of await currentDocEvents) {
+          if (event.type === 'label-answer' && feedbackLabels[event['data']['label']]) {
+            acc.push(event)
+          }
+        }
+        return acc;
+      }
+
+      let booleanGroupLabelAnswer = function (el) {
+        return el.querySelector('input').checked == true
+      }
+
+      var stringGroupLabelAnswer = function (el) {
+        return el.querySelector('input').value
+      }
+
+      var arrayGroupLabelAnswer = function (schema, el) {
+        var enu = schema.items.enum;
+        var typ = schema.items.type;
+        var acc = [];
+        if (enu) {
+          if ('string' == typ) {
+            var inputs = el.querySelectorAll('select');
+            for (const input of inputs) {
+              if (input.value) {
+                acc.push(input.value)
+              }
+            }
+          }
+        } else {
+          if ('string' == typ) {
+            var inputs = el.querySelectorAll('input');
+            for (const input of inputs) {
+              if (input.value) {
+                acc.push(input.value)
+              }
+            }
+          }
+        }
+        return acc;
+      }
+
+      let groupLabelAnswer = function (label, el) {
+        let items = label['json-schema'].items || {};
+        let props = items.properties;
+        let table = el.firstChild.firstChild;
+
+        let rows = [];
+        for (const tr of table.childNodes) {
+          if ('TR' == tr.tagName) {
+            let m = {};
+            let i = 0;
+
+            let order = [];
+            if (items.srvcOrder) {
+              order = items.srvcOrder.values();
+            } else {
+              order = Object.keys(props)
+            }
+
+            for (const k of order) {
+              i++;
+              let node = tr.childNodes[i];
+              let typ = props[k].type;
+              if ('boolean' == typ) {
+                m[k] = booleanGroupLabelAnswer(node);
+              } else if ('string' == typ) {
+                m[k] = stringGroupLabelAnswer(node);
+              } else if ('array' == typ) {
+                m[k] = arrayGroupLabelAnswer(props[k], node);
+              }
+            }
+            rows.push(m);
+          }
+        }
+        return rows;
+      }
+
+      var arrayLabelAnswer = function (label, el) {
+        var itemsType = (label['json-schema'].items || {})['type'];
+        var vals = [];
+        for (const li of el.childNodes) {
+          if ('LI' == li.tagName) {
+            var val = (li.firstChild || {}).value;
+            if (val && 'boolean' == itemsType) {
+              vals.push(li.firstChild.checked)
+            } else if (val && 'string' == itemsType) {
+              vals.push(val);
+            } else if ('object' == itemsType) {
+              vals = groupLabelAnswer(label, el);
+            }
+          }
+        }
+        return vals;
+      };
+
+      const deepEqual = (obj1, obj2) => {
+        if (obj1 === obj2) {
+          return true;
+        }
+
+        if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
+          return false;
+        }
+
+        const keys1 = Object.keys(obj1);
+        const keys2 = Object.keys(obj2);
+
+        if (keys1.length !== keys2.length) {
+          return false;
+        }
+
+        for (const key of keys1) {
+          if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      let labelAnswer = async (answer, label, target) => {
+        return {
+          "data": {
+            "answer": answer,
+            "event": target.hash,
+            "label": label.hash,
+            "reviewer": (await config).reviewer,
+            "timestamp": Math.floor(Date.now() / 1000)
+          },
+          "type": "label-answer"
+        };
+      };
+
+      let labelAnswers = async () => {
+        let feedbackAnswers = await currentFeedbackAnswers();
+        let feedbackLabels = await currentFeedbackLabels();
+
+        if (!feedbackAnswers) {
+          let div = document.createElement('div');
+          div.innerText = "No answers";
+          table.appendChild(div);
+          return;
+        }
+
+        let feedbackAnswer = feedbackAnswers[0];
+        let feedbackLabel = feedbackLabels[feedbackAnswer['data']['label']];
+        let feedbackItems = feedbackLabel['data']['json-schema']['items'];
+        let feedbackOrder = null;
+        if (feedbackItems.srvcOrder) {
+          feedbackOrder = feedbackItems.srvcOrder;
+        } else {
+          feedbackOrder = Object.keys(feedbackItems.properties);
+        }
+        let feedbackProps = feedbackItems.properties;
+
+        let acc = [];
+        let trs = document.querySelectorAll('.feedback-table tr');
+        for (const i in Array.from(trs)) {
+          if (i == 0) continue;
+          let tr = trs[i];
+          let radios = tr.querySelectorAll('input[type="radio"]');
+          if (radios[0].checked) {
+            acc.push(true);
+          } else if (radios[1].checked) {
+            acc.push(false);
+          } else {
+            throw Error('Missing feedback');
+          }
+        }
+
+        return [await labelAnswer(acc, (await config)['current-labels'][0], feedbackAnswer)];
+      };
+
+      const skipDoc = (event) => {
+        event.preventDefault();
+        var req = new XMLHttpRequest();
+        req.addEventListener("load", function (resp) {
+          loadCurrentDocEvents()
+        });
+        req.open("POST", "/srvc/submit-label-answers");
+        req.setRequestHeader("Content-Type", "application/json");
+        req.send(JSON.stringify({ "answers": [] }));
+      };
+
+      const submitDoc = async (event) => {
+        event.preventDefault();
+        var req = new XMLHttpRequest();
+        req.addEventListener("load", function (resp) {
+          loadCurrentDocEvents()
+        });
+        req.open("POST", "/srvc/submit-label-answers");
+        req.setRequestHeader("Content-Type", "application/json");
+        req.send(JSON.stringify({ "answers": await labelAnswers() }));
+      };
+
+      skipEl.addEventListener('click', skipDoc);
+      submitEl.addEventListener('click', submitDoc);
+
+      loadConfig()
+      loadCurrentDocEvents()
+    })();
+  </script>
+</body>
+
+</html>

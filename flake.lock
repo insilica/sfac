@@ -136,17 +136,17 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1683253471,
-        "narHash": "sha256-PDaA14FIbXxL3dzcfhP6qerwrRnmQ9sjT2GEO43cIpQ=",
-        "ref": "master",
-        "rev": "f558d31aa9e1c73d19f0928aa9a4713808b1046b",
-        "revCount": 329,
-        "type": "git",
-        "url": "file:///home/john/src/rs-srvc"
+        "lastModified": 1683260695,
+        "narHash": "sha256-+DCSPiqVKJhOaktAUrKRBNIgYi1N9nbs7gdAlhxLz6M=",
+        "owner": "insilica",
+        "repo": "rs-srvc",
+        "rev": "836112bf7cbe1b0bfc5c86f05d682d30cdfb48bd",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/john/src/rs-srvc"
+        "owner": "insilica",
+        "repo": "rs-srvc",
+        "type": "github"
       }
     },
     "systems": {
