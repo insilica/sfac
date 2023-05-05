@@ -104,7 +104,7 @@
         };
         devShells.default = mkShell {
           buildInputs =
-            [ openai-full poetry2nix.packages.${system}.poetry srvc.packages.${system}.default ];
+            [ srvc.packages.${system}.default ];
         };
       });
 }
