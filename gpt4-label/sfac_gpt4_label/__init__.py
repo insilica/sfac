@@ -1,9 +1,27 @@
+from flask import Flask, request, jsonify
 from json.decoder import JSONDecodeError
 from openai import ChatCompletion
-import asyncio, json, jsonschema, math, openai, os, random, re, sys, tiktoken, time
+import argparse, asyncio, json, jsonschema, math, openai, os, random, re, sys, tiktoken, time
 
 MAX_INPUT_SIZE = 8191
 SYSTEM_MESSAGE = {"role": "system", "content": "You are a ReviewGPT, a research assistant. Provide JSON data using only information from the schema and document. If you aren't sure of an answer, don't provide a value."}
+
+def parse_args():
+  parser = argparse.ArgumentParser(description='Run a GPT4 labeling server')
+  parser.add_argument('-p', '--port', type=int, default=5000)
+  return parser.parse_args()
+
+def srvc_version(config):
+  version = config.get('config', {}).get('srvc', {}).get('version', None)
+  if version:
+    return list(map(int(version.split('.'))))
+
+def srvc_0_18_or_later(config):
+    version = srvc_version(config)
+    if version:
+        major, minor, _ = version
+        return major > 0 or minor > 17
+    return False
 
 def to_json(m):
   return json.dumps(m, separators=(',', ':'))
@@ -41,7 +59,7 @@ def query(prompt, retry_sec=3):
     reduction_ratio = max_prompt_size / tokens
     reduced_prompt_length = int(len(prompt) * (1 - reduction_ratio)) - 1
     prompt = prompt[:reduced_prompt_length]
-    return query(MAX_INPUT_SIZE, prompt)
+    return query(prompt)
   else:
     try:
       return ChatCompletion.create(model="gpt-4", messages=messages)
@@ -107,10 +125,15 @@ def predict_doc(doc, label):
   if predictions:
     return completions_to_answers(predictions, label)
 
-def get_answer(doc, label, predictions, reviewer):
+def get_answer(config, doc, label, predictions, reviewer):
+    if srvc_0_18_or_later(config):
+      eventProp = 'event'
+    else:
+      eventProp = 'document'
+
     data = {
       'answer': predictions,
-      'document': doc['hash'],
+      eventProp: doc['hash'],
       'label': label['hash'],
       'reviewer': reviewer,
       'timestamp': math.floor(time.time())
@@ -125,46 +148,28 @@ async def write_events(stream, events):
       s = json.dumps(event, separators=(',', ':'))
       stream.write(f"{s}\n".encode())
 
-async def main():
-    limit = limit = 1024 * 1024 * 10 # Allow lines up to 10 MiB
+app = Flask(__name__)
 
-    ihost,iport = os.environ["SR_INPUT"].split(":")
-    sr_input, _ = await asyncio.open_connection(ihost, iport, limit=limit)
+@app.route('/map', methods=['POST'])
+def process_json():
+    data = request.get_json()
+    if not data:
+      return jsonify({"error": "Invalid JSON"}), 400
 
-    ohost,oport = os.environ["SR_OUTPUT"].split(":")
-    _, sr_output = await asyncio.open_connection(ohost, oport, limit=limit)
-
-    config = json.load(open(os.environ['SR_CONFIG']))
+    config = data['config']
     reviewer = config['reviewer']
+    events = data['events']
+    doc = events[0]
 
-    doc = None
-    answers = []
-    while True:
-      line = await sr_input.readline()
-      if not line:
-        await sr_output.drain()
-        break
+    for label in config['current-labels']:
+      if label.get('json-schema'):
+        predictions = predict_doc(doc, label)
+        answer = get_answer(config, doc, label, predictions, reviewer)
+        if answer:
+          events.append(answer)
 
-      event = json.loads(line.decode().rstrip())
-      if event['type'] == 'document':
-        if doc:
-          if not len(answers):
-            results = []
-            for label in config['current-labels']:
-              if label['json-schema']:
-                predictions = predict_doc(doc, label)
-                answer = get_answer(doc, label, predictions, reviewer)
-                if answer:
-                  results.append(answer)
-            if len(results):
-              await write_events(sr_output, results)
-        doc = event
-        answers = []
-        sr_output.write(line)
-        await sr_output.drain()
-      elif event['type'] == 'label-answer':
-        answers.append(event)
-        sr_output.write(line)
-      else:
-        sr_output.write(line)
-        await sr_output.drain()
+    return jsonify({'events': events})
+
+async def main():
+    args = parse_args()
+    app.run(debug=True, port=args.port)
