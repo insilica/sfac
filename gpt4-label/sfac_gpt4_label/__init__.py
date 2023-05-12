@@ -4,6 +4,7 @@ from openai import ChatCompletion
 import argparse, asyncio, json, jsonschema, math, openai, os, random, re, sys, tiktoken, time
 
 MAX_INPUT_SIZE = 8191
+REVIEWER = "https://github.com/insilica/sfac/tree/master/gpt4-label"
 SYSTEM_MESSAGE = {"role": "system", "content": "You are a ReviewGPT, a research assistant. Provide JSON data using only information from the schema and document. If you aren't sure of an answer, don't provide a value."}
 
 def parse_args():
@@ -157,7 +158,7 @@ def process_json():
       return jsonify({"error": "Invalid JSON"}), 400
 
     config = data['config']
-    reviewer = config['reviewer']
+    reviewer = REVIEWER
     events = data['events']
     doc = events[0]
 
