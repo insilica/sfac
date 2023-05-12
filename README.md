@@ -9,8 +9,7 @@ nix-shell
 ```
 
 In the nix shell you can now use the SRVC tool `sr` to run flows:
-```nix
-sr flow import # import some documents from pubmed
-sr flow brat   # start a review user interface
-http://127.0.0.1:42445
+```sh
+sr flow feedback   # start a review user interface
+Listening on http://127.0.0.1:6003
 ```

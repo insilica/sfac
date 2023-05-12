@@ -1,105 +1,30 @@
-db: sink.jsonl
-reviewer: "mailto:user@example.com"
+base-uri: https://sysrev.com/web-api/srvc-config?project-id=122402
 
 labels:
-  annotation:
-    type: webannotation
-    question: Annotation
-    entities:
-      - COMPOUND
-      - DOSE
-      - EXPOSURE_ROUTE
-      - IN_VITRO_VIVO
-      - ORGANISM
-      - PARENT_VS_OFFSPRING
-      - PHENOTYPE
-    relationships:
-      inhibits:
-        - from: COMPOUND
-          to: [COMPOUND, ORGANISM]
-      promotes:
-        - from: COMPOUND
-          to: [PHENOTYPE]
   correct-rel:
     question: Mark correct relationships
     json-schema: {"type": "array", "items": {"type": "boolean"}}
-  groupblOdlb:
+  groupUWhAqY:
     question: Relationships
-    required: false
-    json-schema: {"$id":"http://localhost:4061/web-api/srvc-json-schema?hash=QmX86egbGhwdb3zBvEVGxFwhm4FfCcYNAaVkiJhuh2j2Dp","type":"array","items":{"type":"object","required":["stringyUIqDj","categoricalrnZVsv","stringSnKlNe"],"srvcOrder":["stringyUIqDj","categoricalrnZVsv","stringSnKlNe"],"properties":{"stringSnKlNe":{"type":"string","title":"Target","maxLength":100,"minLength":1},"stringyUIqDj":{"type":"string","title":"Source","maxLength":100,"minLength":1},"categoricalrnZVsv":{"type":"array","items":{"enum":["increases susceptibility to","decreases susceptibilty to"],"type":"string"},"title":"Relationship","minItems":1}}},"title":"N/A","$schema":"http://json-schema.org/draft-07/schema"}
-  overall include:
-    question: Include this article?
-    required: true
-    inclusion-values: [true]
-    json-schema: boolean
+    json-schema-uri: https://sysrev.com/web-api/srvc-json-schema?hash=QmWkaaBt6PYhnwMwwYbktkYkyoertnzosBHmS3vTUu71Mt
 
 flows:
-  gpt-label:
+  feedback:
     steps:
-      - run-embedded: generator sink.db
+      - run-embedded: generator https://sysrev.com/web-api/srvc-events?project-id=122402
 
-      - uses: .#gpt-label
-        labels: [groupblOdlb]
-
-      - run-embedded: label-web
-        labels: [groupblOdlb]
-        port: 6001
+      - run-embedded: html feedback/index.html
+        labels: [correct-rel]
+        target-labels: [groupUWhAqY]
+        port: 6003
 
   gpt4-label:
     steps:
-      - run-embedded: generator sink.db
+      - run-embedded: generator https://sysrev.com/web-api/srvc-events?project-id=122402
 
-      #- uses: .#gpt4-label
       - run-embedded: http http://localhost:5000/map
-        labels: [groupblOdlb]
-
-  label-web:
-    steps:
-      - run-embedded: generator sink.db
-
-      - run-embedded: label-web
-        labels: [groupblOdlb]
-        port: 6002
+        labels: [groupUWhAqY]
 
   import:
     steps:
       - run-embedded: generator https://pubmed-http-server.fly.dev?q=sodium+lauryl+sulfate+susceptibility+factor
-
-  spacy:
-    steps:
-      - run-embedded: generator sink.db
-
-      - uses: github:sysrev/srvc-hello#spacy
-        labels: [annotation]
-        model: "https://s3.amazonaws.com/ins.pins/spacy.zip"
-
-  recogito:
-    steps:
-      - run-embedded: generator sink.db
-
-      - run-embedded: html https://static.sysrev.com/srvc/recogito/
-        labels: [annotation]
-
-  brat:
-    steps:
-      - run-embedded: generator sink.db
-
-      - run-embedded: html https://static.sysrev.com/srvc/brat/
-        labels: [annotation]
-
-  finetuning:
-    steps:
-      - run-embedded: generator sink.db
-
-      #- uses: .#openai-label
-      - run-embedded: http http://localhost:5000/map
-        labels: [groupblOdlb]
-
-  feedback:
-    steps:
-      - run-embedded: generator sink.db
-
-      - run-embedded: html feedback/index.html
-        labels: [correct-rel]
-        target-labels: [groupblOdlb]
-        port: 6003
