@@ -190,7 +190,7 @@
         let feedbackAnswers = await currentFeedbackAnswers();
         let feedbackLabels = await currentFeedbackLabels();
 
-        if (!feedbackAnswers) {
+        if (!feedbackAnswers || !feedbackAnswers[0]) {
           let div = document.createElement('div');
           div.innerText = "No answers";
           table.appendChild(div);
