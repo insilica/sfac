@@ -152,7 +152,10 @@
         let feedbackAnswers = await currentFeedbackAnswers();
         let feedbackLabels = await currentFeedbackLabels();
 
-        if (!feedbackAnswers || !feedbackAnswers[0]) {
+        if (!feedbackAnswers || !feedbackAnswers[0]
+             || !feedbackAnswers[0]['data']
+             || !feedbackAnswers[0]['data'][0]
+          ) {
           let div = document.createElement('div');
           div.innerText = "No answers";
           table.appendChild(div);
