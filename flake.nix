@@ -13,9 +13,8 @@
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    srvc.url = "github:insilica/rs-srvc";
   };
-  outputs = { self, nixpkgs, flake-utils, poetry2nix, srvc, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
@@ -102,9 +101,6 @@
           inherit ctdbase-relations finetune-answers gpt-label gpt4-label
             openai-label;
         };
-        devShells.default = mkShell {
-          buildInputs =
-            [ srvc.packages.${system}.default ];
-        };
+        devShells.default = mkShell { buildInputs = [ srvc ]; };
       });
 }
