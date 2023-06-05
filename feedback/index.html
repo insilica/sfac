@@ -203,7 +203,7 @@
           let span = document.createElement('span');
           label.appendChild(span);
           span.classList.add('feedback-caption');
-          span.innerText = '👍';
+          span.innerText = '✓';
           span.style.fontSize = '20pt';
           label = document.createElement('label');
           td.appendChild(label);
@@ -217,7 +217,7 @@
           span = document.createElement('span');
           label.appendChild(span);
           span.classList.add('feedback-caption');
-          span.innerText = '👎';
+          span.innerText = '⨯';
           span.style.fontSize = '20pt';
 
           for (const k of feedbackOrder) {
