@@ -151,10 +151,10 @@
       let insertArrayInput = async (label, answer, table, insertAfter) => {
         let feedbackAnswers = await currentFeedbackAnswers();
         let feedbackLabels = await currentFeedbackLabels();
-
         if (!feedbackAnswers || !feedbackAnswers[0]
              || !feedbackAnswers[0]['data']
-             || !feedbackAnswers[0]['data'][0]
+             || !feedbackAnswers[0]['data']['answer']
+             || !feedbackAnswers[0]['data']['answer'][0]
           ) {
           let div = document.createElement('div');
           div.innerText = "No answers";
