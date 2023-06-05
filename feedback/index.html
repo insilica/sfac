@@ -204,6 +204,7 @@
           label.appendChild(span);
           span.classList.add('feedback-caption');
           span.innerText = '✓';
+          span.style.color = 'darkgreen';
           span.style.fontSize = '20pt';
           label = document.createElement('label');
           td.appendChild(label);
@@ -218,6 +219,7 @@
           label.appendChild(span);
           span.classList.add('feedback-caption');
           span.innerText = '⨯';
+          span.style.color = 'darkred';
           span.style.fontSize = '20pt';
 
           for (const k of feedbackOrder) {
