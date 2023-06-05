@@ -241,7 +241,7 @@
       const labelInput = (label, answer) => {
         var tr = document.createElement('tr');
         var questionTd = document.createElement('td');
-        questionTd.innerText = label['question'];
+        //questionTd.innerText = label['question'];
         var inputTd = document.createElement('td');
         var schemaType = (label['json-schema'] || {})['type'];
         if ('array' == schemaType) {
